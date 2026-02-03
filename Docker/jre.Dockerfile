@@ -4,7 +4,7 @@ WORKDIR /jre-build
 
 # Build minimal JRE using jlink
 RUN $JAVA_HOME/bin/jlink \
-    --add-modules java.base,java.logging \
+    --add-modules java.base,java.logging, java.net, java.io, java.util  \
     --strip-debug \
     --no-man-pages \
     --no-header-files \
