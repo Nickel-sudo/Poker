@@ -1,0 +1,20 @@
+plugins {
+	// Apply the application plugin to add support for building a CLI application in Java.
+    id 'application'
+}
+
+dependencies {}
+
+application {
+    mainClass = 'Server'
+}
+
+// Force the JAR to include Main-Class in the manifest
+
+// Make sure JAR includes Main-Class
+tasks.named('jar') {
+    from(sourceSets.main.output)
+    manifest {
+        attributes('Main-Class': 'Server')
+    }
+}
