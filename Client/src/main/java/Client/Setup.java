@@ -6,6 +6,4 @@ public class Setup {
 		// TODO Auto-generated method stub
 		
 	}
-
-	
 }
