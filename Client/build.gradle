@@ -6,7 +6,7 @@ plugins {
 dependencies {}
 
 application {
-    mainClass = 'Client'
+    mainClass = 'Client.Client'
 }
 
 
