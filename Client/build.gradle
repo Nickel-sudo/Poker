@@ -3,7 +3,9 @@ plugins {
     id 'application'
 }
 
-dependencies {}
+dependencies {
+	implementation project(':SharedObjects')
+}
 
 application {
     mainClass = 'Client.Client'
@@ -14,6 +16,6 @@ application {
 tasks.named('jar') {
     from(sourceSets.main.output)
     manifest {
-        attributes('Main-Class': 'Client')
+        attributes('Main-Class': 'application.mainClass.get()')
     }
 }
