@@ -1,17 +1,37 @@
-plugins {
-    id 'java'
-}
+// Root build.gradle
 
+// Apply common configuration to all subprojects
 subprojects {
+    // Apply Java plugin
     apply plugin: 'java'
 
+    // Set Java version (adjust if needed)
     java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    // Include the shared resources folder for all subprojects
+    sourceSets {
+        main {
+            resources {
+                srcDir "$rootDir/shared-resources"
+            }
         }
     }
 
+    // Optional: define repositories
     repositories {
         mavenCentral()
+    }
+
+    // Optional: common dependencies for all subprojects
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    }
+
+    // Optional: configure test task
+    test {
+        useJUnitPlatform()
     }
 }
