@@ -11,15 +11,6 @@ subprojects {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    // Include the shared resources folder for all subprojects
-    sourceSets {
-        main {
-            resources {
-                srcDir "$rootDir/shared-resources"
-            }
-        }
-    }
-
     // Optional: define repositories
     repositories {
         mavenCentral()

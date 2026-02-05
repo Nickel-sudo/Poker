@@ -6,4 +6,4 @@
  */
  
 rootProject.name = 'Poker'
-include('Server', 'Client')
+include('Server', 'Client', 'SharedObjects')

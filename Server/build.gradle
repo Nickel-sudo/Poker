@@ -3,10 +3,12 @@ plugins {
     id 'application'
 }
 
-dependencies {}
+dependencies {
+	implementation project(':SharedObjects')
+}
 
 application {
-    mainClass = 'Server'
+    mainClass = 'Server.Server'
 }
 
 // Force the JAR to include Main-Class in the manifest
@@ -15,6 +17,6 @@ application {
 tasks.named('jar') {
     from(sourceSets.main.output)
     manifest {
-        attributes('Main-Class': 'Server')
+        attributes('Main-Class': 'application.mainClass.get()')
     }
 }
