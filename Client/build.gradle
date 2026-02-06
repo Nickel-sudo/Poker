@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
 	implementation project(':SharedObjects')
+	implementation 'org.jline:jline:3.30.0'
 }
 
 application {

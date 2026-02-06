@@ -2,7 +2,7 @@ package Client;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-import Client.Exceptions.InvalidNumber;
+import Exceptions.InvalidNumberException;
 
 public class Start {
 	
@@ -16,7 +16,7 @@ public class Start {
 		SCANNER.close();
 	}
 
-	private static void init() {
+	private static void init(){
 		
 		Setup setup = new Setup();
 		
@@ -28,7 +28,7 @@ public class Start {
 			
 			try {
 				if (choice > 3) {
-					throw new InvalidNumber();
+					throw new InvalidNumberException();
 				} else if (choice == 3) {
 					break;
 				} else {
@@ -36,7 +36,7 @@ public class Start {
 				}
 			} catch (InputMismatchException e) {
 				System.out.println("Please enter only numbers");
-			} catch (InvalidNumber e) {
+			} catch (InvalidNumberException e) {
 				System.out.println("Please enter a proper number.");
 			} 
 		}
