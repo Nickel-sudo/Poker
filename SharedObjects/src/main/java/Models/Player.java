@@ -3,9 +3,10 @@ package Models;
 import java.io.Serializable;
 import java.util.Objects;
 
-import SharedObjects.ModelStubs.Role;
-import SharedObjects.ModelStubs.State;
-import SharedObjects.Multicast.GameDiscoveryBroadcaster;
+import ModelStubs.Role;
+import ModelStubs.State;
+import Network.GameDiscoveryBroadcaster;
+import Network.GameDiscoveryListener;
 
 public class Player implements Serializable{
 
