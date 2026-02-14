@@ -1,12 +1,20 @@
 package Client;
 
 import java.io.IOException;
+import java.nio.channels.AlreadyBoundException;
+import java.rmi.registry.Registry;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import Enums.GameSetupSteps;
 import Models.Player;
+import Network.GameDiscoveryBroadcaster;
+import Network.GameDiscoveryListener;
+import Network.GameInfo;
+import Network.RegistryManager;
 import Services.Game;
+import Services.GameSetup;
 
 public class Setup {
 	
@@ -29,8 +37,11 @@ public class Setup {
 		try {
 			if (choice == 1)
 				this.createGame();
-			else 
+			else {
+				System.out.println("Enter Refresh to update the list of available games.");
 				this.joinGame();
+			}
+				
 		} catch(InterruptedException e){
 			e.printStackTrace(); //TODO:define proper print statement
 		} catch (IOException e) {
@@ -48,15 +59,15 @@ public class Setup {
 			
 			step.getPrompt();
 			
-			String input = this.inputThread.inputValidation(step.expectsNumeric(), 0);
+			String input = this.inputThread.inputValidation(step.expectsNumeric(), "Blocking", 0);
 			
-			if (input == "-1")
+			if (input.equals("-1"))
 				return;
 			
 			settings.put(step.toString(), input);
 		}
 		
-		Player hostPlayer = new Player(this.inputThread.inputValidation(false, 0), true);
+		Player hostPlayer = new Player(this.inputThread.inputValidation(false, "Blocking", 0), true);
 		
 		this.inputThread.stopInputThread();
 		//TODO: push settings to Remote
@@ -69,29 +80,83 @@ public class Setup {
 		
 		Game selectedGame = null;
 		this.inputThread.startInputThread();
-		
+		GameDiscoveryListener listener = new GameDiscoveryListener();
+		listener.start();
+				
 		while (selectedGame == null) {
 			
-			//TODO: fetch available games
-			//TODO: check if games exist
+			List<GameInfo> games = listener.getGameInfos();
+			List<GameInfo> copyOfGames = List.copyOf(games); //prevent simultaneous access as gameInfos in listener could be modified
 			
-			try {
-				Thread.sleep(500);
-			} catch(InterruptedException e) {
-				Thread.currentThread().interrupt();
+			if (copyOfGames.isEmpty()) {
+				System.out.println("No Games are currently available.");
+				try {
+					Thread.sleep(500);
+				} catch(InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				
+				System.out.println("Do you want to refresh game list? (Yes/No)");
+				
+				
+				String input = this.inputThread.inputValidation(false, "Blocking", 0);
+					
+				if (!input.equals("No") && !input.equals("Yes")) {
+					System.out.println("Enter either Yes or No. Or Exit to abort.");
+				}
+					
+				if (input.equals("No") || input.equals("-1")) {
+					this.inputThread.stopInputThread();
+					return;
+				}
+				
 				continue;
 			}
 			
-			//TODO:print available games
+			int availableGames = copyOfGames.size();
+			
+			for (int i = 1; i <= availableGames; i++) {
+				System.out.println(i + ": " + copyOfGames.get(i - 1).getName());
+			}
 			
 			System.out.println("Game Number: ");
-			String gameChoice = this.inputThread.inputValidation(true, 0); //0 serves as placeholder and is replaced by number of available games
+			String input = this.inputThread.inputValidation(true, "Blocking", availableGames);
+			
+			if (input.equals("Refresh"))
+				continue;
+			
+			int gameChoice = Integer.valueOf(input);
+			
+			GameInfo selectedGameTmp = copyOfGames.get(gameChoice - 1);
 			
 			//TODO:fetch game 
+			Registry registry = RegistryManager.getRegistry(selectedGameTmp.getHost(), gameChoice, false);
 			
-			Player player = new Player(this.inputThread.inputValidation(false, 0), false);
+			if (registry == null) {
+				System.out.println("Connection to Host failed. Please try again.");
+				continue;
+			}
 			
-			//add Player to game
+			GameSetup service;
+			int attempts = 0;
+			
+			while (true) {
+				try {
+					service = (GameSetup) registry.lookup("GameSetup"); 
+					Player player = new Player(this.inputThread.inputValidation(false, "Blocking", 0), false);
+					//add Player to game
+					break;
+				} catch(Exception e) {
+					if (attempts < 2) {
+						System.out.println("Service not bound. Attempting to bind...");
+						RegistryManager.registerService(registry, null, "GameSetup"); //TODO: Service implementation of GameSetup
+						attempts++;
+					} else {
+						System.out.println("Failed to connect to host.");
+						break;
+					}
+				}
+			}
 		}
 	}
 }
