@@ -12,5 +12,4 @@ public interface GameSetup extends Remote{
             throws RemoteException;
     void abortStart(String gameId) throws RemoteException;
     Game getSelectedGame(String gameId) throws RemoteException;
-    GameManager getGameManager() throws RemoteException;
 }
