@@ -10,7 +10,7 @@ import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-import Exceptions.LargerThanMaxValueException;
+import Exceptions.InvalidNumberException;
 import Exceptions.NegativeNumberException;
 
 public class InputThread {
@@ -45,8 +45,19 @@ public class InputThread {
 		this.inputThread.start();
 	}
 	
-	public String next() throws InterruptedException {
-		return this.queue.take();
+	public String next(String mode) throws InterruptedException {
+		
+		String input;
+		
+		if (mode.equals("Blocking"))
+			input = this.queue.take().trim();
+		else {
+			input = this.queue.poll().trim();
+			if (input == null)
+				return null;
+		}
+		
+		return input.trim();
 	}
 	
 	public void stopInputThread() {
@@ -54,9 +65,13 @@ public class InputThread {
 		this.inputThread.interrupt();
 	}
 	
-	public String inputValidation(boolean numericOnly, int maxValue) throws InterruptedException{
+	public String inputValidation(boolean numericOnly, String mode, int maxValue) throws InterruptedException{
 		
-		String input = this.next();
+		String input = this.next(mode);
+		
+		if (input == null)
+			return null;
+		
 		boolean recurring = false;
 		
 		while (true) {
@@ -64,11 +79,13 @@ public class InputThread {
 			if (input.equals("Exit")) {
 				this.stopInputThread();
 				return "-1";
+			} else if (input.equals("Refresh")) {
+				break;
 			}
 			
 			if (recurring) {
 				System.out.println("Please try again.");
-				input = this.next();
+				input = this.next(mode);
 			} else if (input.trim().equals("")) {
 				System.out.println("Input cannot be empty.");
 				recurring = true;
@@ -81,7 +98,7 @@ public class InputThread {
 						throw new NegativeNumberException();
 					
 					if (tmp > maxValue)
-						throw new LargerThanMaxValueException();
+						throw new InvalidNumberException();
 					
 				} catch(NumberFormatException e) {
 					System.out.println("Only numbers allowed.");
@@ -91,7 +108,7 @@ public class InputThread {
 					System.out.println("Negative Numbers are not allowed.");
 					recurring = true;
 					continue;
-				} catch(LargerThanMaxValueException e) {
+				} catch(InvalidNumberException e) {
 					System.out.println("Please enter a valid number.");
 					recurring = true;
 					continue;
@@ -102,7 +119,7 @@ public class InputThread {
 			
 		}
 		
-		return this.next();
+		return input;
 	}
 }
 
