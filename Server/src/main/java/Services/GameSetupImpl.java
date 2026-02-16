@@ -1,10 +1,12 @@
 package Services;
 
 import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
 import java.util.Map;
 import java.util.UUID;
 
 import Models.Player;
+import Network.RegistryManager;
 
 public class GameSetupImpl implements GameSetup {
 
@@ -38,6 +40,9 @@ public class GameSetupImpl implements GameSetup {
 		game.setHostPlayer(player);
 		
 		this.gameManager.addGame(game, player, callback);
+		
+		Registry registry = RegistryManager.getRegistry(game.getName(), game.getPort(), true);
+		RegistryManager.registerService(registry, game, "GameSetup");
 		
 		return game;
 	}
