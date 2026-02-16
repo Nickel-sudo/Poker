@@ -17,6 +17,6 @@ application {
 tasks.named('jar') {
     from(sourceSets.main.output)
     manifest {
-        attributes('Main-Class': 'application.mainClass.get()')
+        attributes('Main-Class': application.mainClass.get())
     }
 }
