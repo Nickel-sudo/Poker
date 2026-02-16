@@ -12,6 +12,7 @@ public class RegistryManager {
 		
 		try {
 			Registry registry = LocateRegistry.getRegistry(host, port);
+			registry.list();
 			System.out.println("Registry successfully created.");
 			return registry;
 		} catch(RemoteException e) {
