@@ -18,7 +18,7 @@ public class InputThread {
 	Thread inputThread;
 	
 	private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
-	private volatile boolean running = false;
+	public volatile boolean running = false;
 	
 	public void startInputThread() throws IOException {
 		
@@ -38,6 +38,8 @@ public class InputThread {
 					Thread.currentThread().interrupt();
 					break;
 				}
+				
+				break;
 			}
 		});
 		
@@ -78,7 +80,7 @@ public class InputThread {
 			
 			if (input.equals("Exit")) {
 				this.stopInputThread();
-				return "-1";
+				//return "-1";
 			} else if (input.equals("Refresh")) {
 				break;
 			}
@@ -122,4 +124,3 @@ public class InputThread {
 		return input;
 	}
 }
-

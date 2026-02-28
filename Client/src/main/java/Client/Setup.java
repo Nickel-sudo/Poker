@@ -1,6 +1,7 @@
 package Client;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.channels.AlreadyBoundException;
 import java.rmi.registry.Registry;
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class Setup {
 	public static void main(String[] args) {
 		
 		Setup setup = new Setup();
-		setup.inferAction(1);
+		setup.inferAction(2);
 	}
 
 	public void inferAction(int choice) {
@@ -55,26 +56,37 @@ public class Setup {
 		
 		Map<String, String> settings = new HashMap<>();
 		
-		for (GameSetupSteps step : GameSetupSteps.values()) {
+		while(this.inputThread.running) {
 			
-			step.getPrompt();
+			for (GameSetupSteps step : GameSetupSteps.values()) {
+				
+				step.getPrompt();
+				
+				String input = this.inputThread.inputValidation(step.expectsNumeric(), "Blocking", 0);
+				
+				if (input.equals("-1"))
+					return;
+				
+				settings.put(step.toString(), input);
+			}
 			
-			String input = this.inputThread.inputValidation(step.expectsNumeric(), "Blocking", 0);
+			String host = InetAddress.getLocalHost().getHostAddress();
 			
-			if (input.equals("-1"))
-				return;
 			
-			settings.put(step.toString(), input);
+			settings.put("HOST", host );
+			settings.put("PORT", "9999");
+			
+			Player hostPlayer = new Player(this.inputThread.inputValidation(false, "Blocking", 0), true);
+			
+			this.inputThread.stopInputThread(); //keep thread running till lobby is full or host aborted
+			//TODO: push settings to Remote
+			//TODO: create game
+			//TODO: advertise game 
+			System.out.println("Game created");
 		}
-		
-		Player hostPlayer = new Player(this.inputThread.inputValidation(false, "Blocking", 0), true);
-		
-		this.inputThread.stopInputThread();
-		//TODO: push settings to Remote
-		//TODO: create game
-		//TODO: advertise game 
-		System.out.println("Game created");
 	}
+		
+		
 
 	private void joinGame() throws IOException, InterruptedException  {
 		
@@ -83,7 +95,7 @@ public class Setup {
 		GameDiscoveryListener listener = new GameDiscoveryListener();
 		listener.start();
 				
-		while (selectedGame == null) {
+		while (this.inputThread.running) {
 			
 			List<GameInfo> games = listener.getGameInfos();
 			List<GameInfo> copyOfGames = List.copyOf(games); //prevent simultaneous access as gameInfos in listener could be modified
@@ -105,8 +117,9 @@ public class Setup {
 					System.out.println("Enter either Yes or No. Or Exit to abort.");
 				}
 					
-				if (input.equals("No") || input.equals("-1")) {
+				if (input.equals("No")) {
 					this.inputThread.stopInputThread();
+					listener.stopListening();
 					return;
 				}
 				
@@ -129,7 +142,7 @@ public class Setup {
 			
 			GameInfo selectedGameTmp = copyOfGames.get(gameChoice - 1);
 			
-			//TODO:fetch game 
+			//TODO:fetch game f
 			Registry registry = RegistryManager.getRegistry(selectedGameTmp.getHost(), gameChoice, false);
 			
 			if (registry == null) {

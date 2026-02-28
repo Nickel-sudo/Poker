@@ -22,7 +22,7 @@ public class Start {
 		
 		while(true) {
 			
-			System.out.println("Enter the proper number \n 1. Create New Game \n 2. Join Existing Game \n 3.Quit");
+			System.out.println("Enter the proper number \n 1. Create New Game \n 2. Join Existing Game \n 3. Quit");
 			
 			int choice = SCANNER.nextInt();
 			
@@ -40,5 +40,7 @@ public class Start {
 				System.out.println("Please enter a proper number.");
 			} 
 		}
+		
+		setup.inputThread.stopInputThread();
 	}
 }
