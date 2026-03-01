@@ -1,6 +1,7 @@
-From eclipse-temurin:21 AS server-image 
+FROM eclipse-temurin:21 AS server-image 
 
-workdir /app
+WORKDIR /app
 
-COPY build/libs/Server.jar app.jar
+COPY Server/build/libs/Server.jar app.jar
 
+ENTRYPOINT ["true"]

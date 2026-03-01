@@ -1,5 +1,7 @@
-From eclipse-temurin:21 AS client-image 
+FROM eclipse-temurin:21 AS client-image 
 
-workdir /app
+WORKDIR /app
 
-COPY build/libs/Client.jar app.jar
+COPY Client/build/libs/Client.jar app.jar
+
+ENTRYPOINT ["true"]

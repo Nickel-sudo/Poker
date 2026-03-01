@@ -20,6 +20,6 @@ services:
     depends_on:
       - server
       - client
-	  
-// dockerfles to submodules as each container is built separately
-// .dockerignore
+
+# dockerfiles to submodules as each container is built separately
+# .dockerignore
