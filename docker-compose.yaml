@@ -4,11 +4,22 @@ services:
   server:
     build:
       context: .
-      dockerfile: Docker/server.Dockerfile
+      dockerfile: Docker/server.dockerfile
 
   client:
     build:
       context: .
-      dockerfile: Docker/client.Dockerfile
+      dockerfile: Docker/client.dockerfile
     depends_on:
       - server
+
+  app:
+    build:
+      context: .
+      dockerfile: Docker/app.dockerfile
+    depends_on:
+      - server
+      - client
+	  
+// dockerfles to submodules as each container is built separately
+// .dockerignore
