@@ -7,16 +7,3 @@ dependencies {
 	implementation project(':SharedObjects')
 	implementation 'org.jline:jline:3.30.0'
 }
-
-application {
-    mainClass = 'Client.Client'
-}
-
-
-// Make sure JAR includes Main-Class
-tasks.named('jar') {
-    from(sourceSets.main.output)
-    manifest {
-        attributes('Main-Class': application.mainClass.get())
-    }
-}
