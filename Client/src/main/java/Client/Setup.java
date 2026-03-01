@@ -1,7 +1,6 @@
 package Client;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.channels.AlreadyBoundException;
 import java.rmi.registry.Registry;
 import java.util.HashMap;
@@ -24,78 +23,44 @@ public class Setup {
 	public Setup() {
 		this.inputThread = new InputThread();
 	}
-	
-	public static void main(String[] args) {
-		
-		Setup setup = new Setup();
-		setup.inferAction(2);
-	}
 
-	public void inferAction(int choice) {
-		
-		System.out.println("Enter Exit to quit game setup");
-		
-		try {
-			if (choice == 1)
-				this.createGame();
-			else {
-				System.out.println("Enter Refresh to update the list of available games.");
-				this.joinGame();
-			}
-				
-		} catch(InterruptedException e){
-			e.printStackTrace(); //TODO:define proper print statement
-		} catch (IOException e) {
-			e.printStackTrace(); //TODO:define proper print statement
-		}
-	} 
-
-	private void createGame() throws InterruptedException, IOException {
+	public void createGame() throws InterruptedException, IOException {
 		
 		this.inputThread.startInputThread();
 		
 		Map<String, String> settings = new HashMap<>();
 		
-		while(this.inputThread.running) {
+		for (GameSetupSteps step : GameSetupSteps.values()) {
 			
-			for (GameSetupSteps step : GameSetupSteps.values()) {
-				
-				step.getPrompt();
-				
-				String input = this.inputThread.inputValidation(step.expectsNumeric(), "Blocking", 0);
-				
-				if (input.equals("-1"))
-					return;
-				
-				settings.put(step.toString(), input);
-			}
+			step.getPrompt();
 			
-			String host = InetAddress.getLocalHost().getHostAddress();
+			String input = this.inputThread.inputValidation(step.expectsNumeric(), "Blocking", 0);
 			
+			if (input.equals("-1"))
+				return;
 			
-			settings.put("HOST", host );
-			settings.put("PORT", "9999");
-			
-			Player hostPlayer = new Player(this.inputThread.inputValidation(false, "Blocking", 0), true);
-			
-			this.inputThread.stopInputThread(); //keep thread running till lobby is full or host aborted
-			//TODO: push settings to Remote
-			//TODO: create game
-			//TODO: advertise game 
-			System.out.println("Game created");
+			settings.put(step.toString(), input);
 		}
+		
+		Player hostPlayer = new Player(this.inputThread.inputValidation(false, "Blocking", 0), true);
+		
+		this.inputThread.stopInputThread();
+		//TODO: push settings to Remote
+		//TODO: create game
+		//TODO: advertise game 
+		System.out.println("Game created");
 	}
-		
-		
 
-	private void joinGame() throws IOException, InterruptedException  {
+	public void joinGame() throws IOException, InterruptedException  {
+		
+		System.out.println("Enter Refresh to update the list of available games.");
 		
 		Game selectedGame = null;
 		this.inputThread.startInputThread();
 		GameDiscoveryListener listener = new GameDiscoveryListener();
 		listener.start();
 				
-		while (this.inputThread.running) {
+		while (selectedGame == null) {
 			
 			List<GameInfo> games = listener.getGameInfos();
 			List<GameInfo> copyOfGames = List.copyOf(games); //prevent simultaneous access as gameInfos in listener could be modified
@@ -117,9 +82,8 @@ public class Setup {
 					System.out.println("Enter either Yes or No. Or Exit to abort.");
 				}
 					
-				if (input.equals("No")) {
+				if (input.equals("No") || input.equals("-1")) {
 					this.inputThread.stopInputThread();
-					listener.stopListening();
 					return;
 				}
 				
@@ -142,7 +106,7 @@ public class Setup {
 			
 			GameInfo selectedGameTmp = copyOfGames.get(gameChoice - 1);
 			
-			//TODO:fetch game f
+			//TODO:fetch game 
 			Registry registry = RegistryManager.getRegistry(selectedGameTmp.getHost(), gameChoice, false);
 			
 			if (registry == null) {
