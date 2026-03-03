@@ -1,7 +1,10 @@
 package Client;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.channels.AlreadyBoundException;
+import java.rmi.NotBoundException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.HashMap;
 import java.util.List;
@@ -23,33 +26,8 @@ public class Setup {
 	public Setup() {
 		this.inputThread = new InputThread();
 	}
-	
-	public static void main(String[] args) {
-		
-		Setup setup = new Setup();
-		setup.inferAction(1);
-	}
 
-	public void inferAction(int choice) {
-		
-		System.out.println("Enter Exit to quit game setup");
-		
-		try {
-			if (choice == 1)
-				this.createGame();
-			else {
-				System.out.println("Enter Refresh to update the list of available games.");
-				this.joinGame();
-			}
-				
-		} catch(InterruptedException e){
-			e.printStackTrace(); //TODO:define proper print statement
-		} catch (IOException e) {
-			e.printStackTrace(); //TODO:define proper print statement
-		}
-	} 
-
-	private void createGame() throws InterruptedException, IOException {
+	public void createGame() throws InterruptedException, IOException, NotBoundException {
 		
 		this.inputThread.startInputThread();
 		
@@ -59,7 +37,7 @@ public class Setup {
 			
 			step.getPrompt();
 			
-			String input = this.inputThread.inputValidation(step.expectsNumeric(), "Blocking", 0);
+			String input = this.inputThread.inputValidation(step.expectsNumeric(), 0);
 			
 			if (input.equals("-1"))
 				return;
@@ -67,16 +45,37 @@ public class Setup {
 			settings.put(step.toString(), input);
 		}
 		
-		Player hostPlayer = new Player(this.inputThread.inputValidation(false, "Blocking", 0), true);
+		Player hostPlayer = new Player(this.inputThread.inputValidation(false, 0), true);
 		
-		this.inputThread.stopInputThread();
-		//TODO: push settings to Remote
-		//TODO: create game
-		//TODO: advertise game 
-		System.out.println("Game created");
+		Registry hostRegistry = LocateRegistry.getRegistry(InetAddress.getLocalHost().getHostAddress(), 9999);
+		GameSetup setupService = (GameSetup) hostRegistry.lookup("GameSetup");
+		Game newGame = setupService.createGame(settings, hostPlayer);
+		
+		System.out.println("Game created. Waiting for Players to join... (joinedPlayers/" + newGame.getMaxPlayers());
+		
+		this.inputThread.setGame(newGame);
+		
+		while(!this.inputThread.lobbyFull) {
+			
+			String input = this.inputThread.inputValidation(false, 0);
+			if (input == "-1") {
+				//async Broadcast that game has been aborted by hosts to joined clients
+				this.inputThread = null;
+				this.inputThread.stopInputThread(false); //clearup method
+				return;
+			}
+		}
+		
+		this.inputThread.stopInputThread(false);
+		this.inputThread = null;
+		System.out.println("All Players have joined. Game ready to start.");
+		
+		//init game start
 	}
 
-	private void joinGame() throws IOException, InterruptedException  {
+	public void joinGame() throws IOException, InterruptedException  {
+		
+		System.out.println("Enter Refresh to update the list of available games.");
 		
 		Game selectedGame = null;
 		this.inputThread.startInputThread();
@@ -98,15 +97,10 @@ public class Setup {
 				
 				System.out.println("Do you want to refresh game list? (Yes/No)");
 				
-				
-				String input = this.inputThread.inputValidation(false, "Blocking", 0);
-					
-				if (!input.equals("No") && !input.equals("Yes")) {
-					System.out.println("Enter either Yes or No. Or Exit to abort.");
-				}
+				String input = this.inputThread.inputValidation(false, 0);
 					
 				if (input.equals("No") || input.equals("-1")) {
-					this.inputThread.stopInputThread();
+					this.inputThread.stopInputThread(false);
 					return;
 				}
 				
@@ -120,9 +114,9 @@ public class Setup {
 			}
 			
 			System.out.println("Game Number: ");
-			String input = this.inputThread.inputValidation(true, "Blocking", availableGames);
+			String input = this.inputThread.inputValidation(true, availableGames);
 			
-			if (input.equals("Refresh"))
+			if (input.equals("Refresh")) //cache fetched games
 				continue;
 			
 			int gameChoice = Integer.valueOf(input);
@@ -137,13 +131,12 @@ public class Setup {
 				continue;
 			}
 			
-			GameSetup service;
 			int attempts = 0;
 			
 			while (true) {
 				try {
-					service = (GameSetup) registry.lookup("GameSetup"); 
-					Player player = new Player(this.inputThread.inputValidation(false, "Blocking", 0), false);
+					GameSetup service = (GameSetup) registry.lookup("GameSetup"); 
+					Player player = new Player(this.inputThread.inputValidation(false, 0), false);
 					//add Player to game
 					break;
 				} catch(Exception e) {
@@ -157,6 +150,8 @@ public class Setup {
 					}
 				}
 			}
+			this.inputThread.stopInputThread(false);
+			//wait for Lobby
 		}
 	}
 }
