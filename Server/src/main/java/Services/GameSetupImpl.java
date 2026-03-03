@@ -17,7 +17,7 @@ public class GameSetupImpl implements GameSetup {
 	}
 	
 	@Override
-	public Game createGame(Map<String, String> gameSettings, Player player, GameClientCallback callback)
+	public Game createGame(Map<String, String> gameSettings, Player player)
 			throws RemoteException {
 		
         GameImpl game = new GameImpl();
@@ -39,16 +39,13 @@ public class GameSetupImpl implements GameSetup {
 		game.setRunning(true);
 		game.setHostPlayer(player);
 		
-		this.gameManager.addGame(game, player, callback);
-		
-		Registry registry = RegistryManager.getRegistry(game.getName(), game.getPort(), true);
-		RegistryManager.registerService(registry, game, "GameSetup");
+		this.gameManager.addGame(game, player, new GameClientCallbackImpl());
 		
 		return game;
 	}
 	
 	@Override
-	public void joinGame(String gameId, Player player, GameClientCallback callback) throws RemoteException {
+	public void joinGame(String gameId, Player player) throws RemoteException {
 		// TODO Auto-generated method stub
 
 	}
@@ -62,6 +59,4 @@ public class GameSetupImpl implements GameSetup {
 	public void abortStart(String gameId) throws RemoteException {
 		// TODO Auto-generated method stub
 	}
-	
-	
 }
