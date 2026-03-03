@@ -2,6 +2,7 @@ package App;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.rmi.NotBoundException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -13,7 +14,7 @@ public class Main {
 
 private static final Scanner SCANNER = new Scanner(System.in);
 	
-	public static void main(String[] args) throws InterruptedException, IOException {
+	public static void main(String[] args) throws InterruptedException, IOException, NotBoundException {
 		
 		System.out.println("Welcome to Pokerino. The rules are aligned to classic Texas Hold'em");
 		
@@ -21,29 +22,26 @@ private static final Scanner SCANNER = new Scanner(System.in);
 		SCANNER.close();
 	}
 
-	private static void init() throws InterruptedException, IOException{
+	private static void init() throws InterruptedException, IOException, NotBoundException{
 		
 		Setup setup = new Setup();
 		
 		while(true) {
 			
-			System.out.println("Enter the proper number \n 1. Create New Game \n 2. Join Existing Game \n 3.Quit");
+			System.out.println("Enter the proper number \n 1. Create New Game \n 2. Join Existing Game \n 3. Quit");
 			
 			int choice = SCANNER.nextInt();
 			
 			try {
-				if (choice > 3) {
-					throw new InvalidNumberException();
+				if (choice == 1) {
+					HostSetup.setupHost(InetAddress.getLocalHost().getHostAddress(), 9999);
+					setup.createGame();
+				} else if (choice == 2) {
+					setup.joinGame();
 				} else if (choice == 3) {
 					break;
 				} else {
-					
-					if (choice == 1) {
-						HostSetup.setupHost(InetAddress.getLocalHost().getHostAddress(), 9999);
-						setup.createGame();
-					} else {
-						setup.joinGame();
-					}
+					throw new InvalidNumberException();
 				}
 			} catch (InputMismatchException e) {
 				System.out.println("Please enter only numbers");
