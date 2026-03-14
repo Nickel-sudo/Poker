@@ -18,5 +18,4 @@ public interface Game extends Remote{
     Player getHostPlayer() throws RemoteException;
     String getHost() throws RemoteException;
     int getPort() throws RemoteException;
-    boolean isRunning() throws RemoteException;
 }

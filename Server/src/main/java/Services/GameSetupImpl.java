@@ -1,20 +1,14 @@
 package Services;
 
 import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
 import java.util.Map;
 import java.util.UUID;
 
+import Helper.CallbackManager;
+import Helper.GameManager;
 import Models.Player;
-import Network.RegistryManager;
 
 public class GameSetupImpl implements GameSetup {
-
-	GameManagerImpl gameManager;
-	
-	public GameSetupImpl() {
-		this.gameManager = new GameManagerImpl();
-	}
 	
 	@Override
 	public Game createGame(Map<String, String> gameSettings, Player player)
@@ -26,7 +20,7 @@ public class GameSetupImpl implements GameSetup {
         
 		do {
 			gameId = UUID.randomUUID().toString();
-		} while(this.gameManager.getActiveGames().containsKey(gameId));
+		} while(GameManager.getActiveGames().containsKey(gameId));
 		
 		game.setGameId(gameId);
 		game.setGameName(gameSettings.get("LOBBY_NAME"));
@@ -39,7 +33,11 @@ public class GameSetupImpl implements GameSetup {
 		game.setRunning(true);
 		game.setHostPlayer(player);
 		
-		this.gameManager.addGame(game, player, new GameClientCallbackImpl());
+		game.addPlayer(player, new GameClientCallbackImpl());
+		
+		GameManager.addGame(game, player);
+		
+		game.getHostPlayer().getBroadcast().start();
 		
 		return game;
 	}
@@ -52,11 +50,11 @@ public class GameSetupImpl implements GameSetup {
 	
 	@Override
 	public Game getSelectedGame(String gameId) throws RemoteException {
-		return this.gameManager.getGame(gameId);
+		return GameManager.getGame(gameId);
 	}
 
 	@Override
 	public void abortStart(String gameId) throws RemoteException {
-		// TODO Auto-generated method stub
+		GameManager.removeAndTerminate(gameId, true, "Aborted by host.");
 	}
 }

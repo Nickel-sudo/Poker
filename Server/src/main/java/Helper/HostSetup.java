@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import Services.GameClientCallbackImpl;
 import Services.GameSetupImpl;
 
 public class HostSetup {
@@ -31,8 +32,7 @@ public class HostSetup {
 		while (true) {
 			try {
 				registry.bind("GameSetup", new GameSetupImpl()); 
-				//registry.bind("GameClientCallback", new GameClientCallbackImpl());
-				//registry.bind("GameManager", new GameManagerImpl());
+				registry.bind("GameClientCallback", new GameClientCallbackImpl());
 				//registry.bind("Game", new GameImpl());
 				break;
 			} catch(AlreadyBoundException a) {

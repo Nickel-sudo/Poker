@@ -1,8 +1,13 @@
 package Services;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import Helper.CallbackManager;
 import Models.Player;
 
 public class GameImpl implements Game {
@@ -17,6 +22,15 @@ public class GameImpl implements Game {
 	private boolean running;
 	private String host;
 	private int port;
+	
+	List<Player> players;
+	CallbackManager callbackManager;
+	private final ReadWriteLock lock = new ReentrantReadWriteLock();
+	
+	public GameImpl() {
+		this.players = new ArrayList<Player>(); 
+		this.callbackManager = new CallbackManager();
+	}
 
 	public void setGameId(String gameId) {
 		this.gameId = gameId;
@@ -100,26 +114,57 @@ public class GameImpl implements Game {
 	
 	@Override
 	public int getRemainingSpots() throws RemoteException {
-		// TODO Auto-generated method stub
-		return 0;
+		
+		this.lock.readLock().lock();
+		
+		int remainingPlayers;
+		
+		try {
+			remainingPlayers = this.maxPlayers - this.players.size();
+		} finally {
+			this.lock.readLock().unlock();
+		}
+		
+		return remainingPlayers;
 	}
 
 	@Override
 	public String getHost() throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
+		return this.host;
 	}
 
 	@Override
 	public int getPort() throws RemoteException {
-		// TODO Auto-generated method stub
-		return 0;
+		return this.port;
+	}
+	
+	public CallbackManager getCallbackManager() {
+		return this.callbackManager;
+	}
+	
+	private boolean idTaken(String id) {
+		return this.players.stream().anyMatch(player -> player.getPlayerId().equals(id));
 	}
 
-	@Override
-	public boolean isRunning() throws RemoteException {
-		// TODO Auto-generated method stub
-		return false;
+	public void addPlayer(Player player, GameClientCallbackImpl gameClientCallback) {
+		
+		this.lock.writeLock().lock();
+		
+		try {
+			String playerId;
+        
+			do {
+				playerId = UUID.randomUUID().toString();
+			} while(idTaken(playerId));
+		
+			player.setPlayerId(playerId);
+		
+			if (this.players.size() < maxPlayers - 1) {
+				this.players.add(player);
+				this.callbackManager.addCallback(playerId, gameClientCallback);
+			}
+		} finally {
+			this.lock.writeLock().unlock();
+		}
 	}
-
 }
