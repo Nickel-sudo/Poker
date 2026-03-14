@@ -18,20 +18,8 @@ public class InputThread {
 	
 	Thread inputThread;
 	
-	public Game getGame() {
-		return game;
-	}
-
-	public void setGame(Game game) {
-		this.game = game;
-	}
-
-	Game game;
-	
 	private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
 	public volatile boolean running = false;
-
-	public boolean lobbyFull;
 	
 	public void startInputThread() throws IOException {
 		
@@ -78,10 +66,7 @@ public class InputThread {
 		}
 	}
 	
-	public void stopInputThread(boolean gameInitiated) {
-		
-		if (gameInitiated)
-			lobbyFull = false;
+	public void stopInputThread() {
 			
 		running = false;
 		this.inputThread.interrupt();

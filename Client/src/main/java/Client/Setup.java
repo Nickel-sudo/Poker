@@ -51,23 +51,20 @@ public class Setup {
 		GameSetup setupService = (GameSetup) hostRegistry.lookup("GameSetup");
 		Game newGame = setupService.createGame(settings, hostPlayer);
 		
-		System.out.println("Game created. Waiting for Players to join... (joinedPlayers/" + newGame.getMaxPlayers());
+		System.out.println("Game created. Waiting for others to join...");
 		
-		this.inputThread.setGame(newGame);
-		
-		while(!this.inputThread.lobbyFull) {
+		while(newGame.getRemainingSpots() > 0) {
 			
-			String input = this.inputThread.inputValidation(false, 0);
-			if (input == "-1") {
-				//async Broadcast that game has been aborted by hosts to joined clients
-				this.inputThread = null;
-				this.inputThread.stopInputThread(false); //clearup method
+			String input = this.inputThread.inputDuringLobbyInit();
+			
+			if (input.equals("-1")) {
+				setupService.abortStart(newGame.getId());
+				clear(null);
 				return;
 			}
 		}
 		
-		this.inputThread.stopInputThread(false);
-		this.inputThread = null;
+		clear(null);
 		System.out.println("All Players have joined. Game ready to start.");
 		
 		//init game start
@@ -100,7 +97,7 @@ public class Setup {
 				String input = this.inputThread.inputValidation(false, 0);
 					
 				if (input.equals("No") || input.equals("-1")) {
-					this.inputThread.stopInputThread(false);
+					clear(listener);
 					return;
 				}
 				
@@ -146,12 +143,23 @@ public class Setup {
 						attempts++;
 					} else {
 						System.out.println("Failed to connect to host.");
+						clear(listener);
 						break;
 					}
 				}
 			}
-			this.inputThread.stopInputThread(false);
+			
+			clear(listener);
 			//wait for Lobby
 		}
+	}
+	
+	void clear(GameDiscoveryListener listener) {
+		
+		if (listener != null)
+			listener.stopListening();
+		
+		this.inputThread.stopInputThread();
+		this.inputThread = null;
 	}
 }
